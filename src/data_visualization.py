@@ -9,6 +9,18 @@ from collections import Counter
 from tqdm import tqdm
 
 
+def visualize_class_balance(data_path):
+    metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
+    class_counts = metadata['label'].value_counts(normalize=True)
+    percentage_strings = class_counts.round(4) * 100
+    percentage_strings = percentage_strings.astype('str') + '%'
+
+    plt.figure(figsize=(8, 8))
+    plt.pie(class_counts, labels=percentage_strings)
+    plt.legend(class_counts.index)
+    plt.show()
+
+
 def visualize_tags(data_path):
     tag_counts = Counter()
     for filename in tqdm(os.listdir(data_path + '/all_files')):
@@ -24,7 +36,8 @@ def visualize_tags(data_path):
                                  key=lambda x: x[1],
                                  reverse=True))
     idx = np.arange(2*len(labels), step=2)
-    plt.bar(idx, values, width=1)
+    plt.figure()
+    plt.bar(idx, values, width=1, edgecolor='black')
     plt.xticks(idx, labels=labels, rotation=90)
     plt.xlabel('Etiquetas')
     plt.ylabel('Frequência absoluta')
@@ -60,6 +73,7 @@ def visualize_polarities(data_path, lexicon_path):
             polarity_counts.loc['negative', class_] += negative_count
 
     idx = np.arange(2*len(polarity_counts.columns), step=2)
+    plt.figure()
     plt.bar(idx, polarity_counts.loc['positive', :],
             width=0.5, color='green', edgecolor='black')
     plt.bar(idx+0.5, polarity_counts.loc['negative', :],
@@ -92,13 +106,20 @@ def visualize_negation(data_path, lexicon_path):
             negation_count = len(set(tokens).intersection(negation_words))
 
             negation_counts.loc['negation', class_] += negation_count
-    
-    print(negation_counts)
+
+    idx = np.arange(2*len(negation_counts.columns), step=2)
+    plt.figure()
+    plt.bar(idx, negation_counts.loc['negation', :], edgecolor='black')
+    plt.xticks(idx, negation_counts.columns)
+    plt.xlabel('Classes')
+    plt.ylabel('Absolute frequency of negation words')
+    plt.show()
 
 
 def main():
     data_path = 'hate-speech-dataset'
     lexicon_path = 'lexicon'
+    visualize_class_balance(data_path)
     visualize_tags(data_path)
     visualize_polarities(data_path, lexicon_path)
     visualize_negation(data_path, lexicon_path)
