@@ -32,8 +32,8 @@ def visualize_tags(data_path):
 
 
 def visualize_polarities(data_path, lexicon_path):
-    positive_path = lexicon_path + '/positive_words_en.txt'
-    negative_path = lexicon_path + '/negative_words_en.txt'
+    positive_path = lexicon_path + '/positive.txt'
+    negative_path = lexicon_path + '/negative.txt'
 
     positive_f = open(positive_path, 'r')
     negative_f = open(negative_path, 'r')
@@ -61,9 +61,9 @@ def visualize_polarities(data_path, lexicon_path):
 
     idx = np.arange(2*len(polarity_counts.columns), step=2)
     plt.bar(idx, polarity_counts.loc['positive', :],
-                             width=0.5, color='green', edgecolor='black')
+            width=0.5, color='green', edgecolor='black')
     plt.bar(idx+0.5, polarity_counts.loc['negative', :],
-                             width=0.5, color='red', edgecolor='black')
+            width=0.5, color='red', edgecolor='black')
     plt.xticks(ticks=idx+0.25, labels=polarity_counts.columns)
     plt.xlabel('Classes')
     plt.ylabel('Absolute frequency of polarity words')
@@ -71,11 +71,37 @@ def visualize_polarities(data_path, lexicon_path):
     plt.show()
 
 
+def visualize_negation(data_path, lexicon_path):
+    negation_path = lexicon_path + '/negation.txt'
+
+    negation_f = open(negation_path, 'r')
+    negation_words = {w.strip() for w in negation_f.readlines()}
+    negation_f.close()
+
+    metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
+
+    negation_counts = pd.DataFrame(0, index=['negation'],
+                                   columns=metadata['label'].unique())
+
+    for _, file_ in tqdm(metadata.iterrows()):
+        filepath = data_path + '/all_files/' + file_['file_id'] + '.txt'
+        class_ = file_['label']
+
+        with open(filepath) as f:
+            tokens = word_tokenize(f.read())
+            negation_count = len(set(tokens).intersection(negation_words))
+
+            negation_counts.loc['negation', class_] += negation_count
+    
+    print(negation_counts)
+
+
 def main():
     data_path = 'hate-speech-dataset'
     lexicon_path = 'lexicon'
     visualize_tags(data_path)
     visualize_polarities(data_path, lexicon_path)
+    visualize_negation(data_path, lexicon_path)
 
 
 if __name__ == "__main__":
