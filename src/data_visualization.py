@@ -128,8 +128,8 @@ def visualize_negation(data_path, lexicon_path):
 def main():
     data_path = 'hate-speech-dataset'
     lexicon_path = 'lexicon'
-    visualize_class_balance(data_path)
-    visualize_tags(data_path)
+    # visualize_class_balance(data_path)
+    # visualize_tags(data_path)
     visualize_polarities(data_path, lexicon_path)
     visualize_negation(data_path, lexicon_path)
 
