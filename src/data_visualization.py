@@ -57,7 +57,7 @@ def visualize_polarities(data_path, lexicon_path):
 
     metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
 
-    polarity_counts = pd.DataFrame(0, index=['positive', 'negative'],
+    polarity_counts = pd.DataFrame(0, index=['positive', 'negative', 'total'],
                                    columns=metadata['label'].unique())
 
     for _, file_ in tqdm(metadata.iterrows()):
@@ -71,16 +71,21 @@ def visualize_polarities(data_path, lexicon_path):
 
             polarity_counts.loc['positive', class_] += positive_count
             polarity_counts.loc['negative', class_] += negative_count
+            polarity_counts.loc['total', class_] += len(tokens)
 
+    positive_rate = polarity_counts.loc['positive', :] / polarity_counts.loc['total', :]
+    positive_rate *= 100
+    negative_rate = polarity_counts.loc['negative', :] / polarity_counts.loc['total', :]
+    negative_rate *= 100
     idx = np.arange(2*len(polarity_counts.columns), step=2)
     plt.figure()
-    plt.bar(idx, polarity_counts.loc['positive', :],
+    plt.bar(idx, positive_rate,
             width=0.5, color='green', edgecolor='black')
-    plt.bar(idx+0.5, polarity_counts.loc['negative', :],
+    plt.bar(idx+0.5, negative_rate,
             width=0.5, color='red', edgecolor='black')
     plt.xticks(ticks=idx+0.25, labels=polarity_counts.columns)
     plt.xlabel('Classes')
-    plt.ylabel('Absolute frequency of polarity words')
+    plt.ylabel('Rate of polarity words (%)')
     plt.legend(['positive', 'negative'])
     plt.show()
 
@@ -94,7 +99,7 @@ def visualize_negation(data_path, lexicon_path):
 
     metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
 
-    negation_counts = pd.DataFrame(0, index=['negation'],
+    negation_counts = pd.DataFrame(0, index=['negation', 'total'],
                                    columns=metadata['label'].unique())
 
     for _, file_ in tqdm(metadata.iterrows()):
@@ -106,13 +111,17 @@ def visualize_negation(data_path, lexicon_path):
             negation_count = len(set(tokens).intersection(negation_words))
 
             negation_counts.loc['negation', class_] += negation_count
+            negation_counts.loc['total', class_] += len(tokens)
 
+    negation_rate = negation_counts.loc['negation',
+                                        :] / negation_counts.loc['total', :]
+    negation_rate *= 100
     idx = np.arange(2*len(negation_counts.columns), step=2)
     plt.figure()
-    plt.bar(idx, negation_counts.loc['negation', :], edgecolor='black')
+    plt.bar(idx, negation_rate, edgecolor='black')
     plt.xticks(idx, negation_counts.columns)
     plt.xlabel('Classes')
-    plt.ylabel('Absolute frequency of negation words')
+    plt.ylabel('Rate of negation words (%)')
     plt.show()
 
 
