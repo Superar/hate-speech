@@ -73,9 +73,11 @@ def visualize_polarities(data_path, lexicon_path):
             polarity_counts.loc['negative', class_] += negative_count
             polarity_counts.loc['total', class_] += len(tokens)
 
-    positive_rate = polarity_counts.loc['positive', :] / polarity_counts.loc['total', :]
+    positive_rate = polarity_counts.loc['positive',
+                                        :] / polarity_counts.loc['total', :]
     positive_rate *= 100
-    negative_rate = polarity_counts.loc['negative', :] / polarity_counts.loc['total', :]
+    negative_rate = polarity_counts.loc['negative',
+                                        :] / polarity_counts.loc['total', :]
     negative_rate *= 100
     idx = np.arange(2*len(polarity_counts.columns), step=2)
     plt.figure()
@@ -125,6 +127,29 @@ def visualize_negation(data_path, lexicon_path):
     plt.show()
 
 
+def visualize_sentence_length(data_path):
+    metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
+    lengths = pd.DataFrame(
+        index=metadata['file_id'], columns=['label', 'length'])
+
+    for _, file_ in tqdm(metadata.iterrows()):
+        filepath = data_path + '/all_files/' + file_['file_id'] + '.txt'
+        class_ = file_['label']
+        lengths.loc[file_['file_id'], 'label'] = class_
+
+        with open(filepath) as f:
+            tokens = word_tokenize(f.read())
+            sent_len = len(tokens)
+            lengths.loc[file_['file_id'], 'length'] = sent_len
+
+    lengths.boxplot(column='length', by='label', showfliers=False)
+    plt.title('')
+    plt.suptitle('')
+    plt.ylabel('Sentence length (tokens)')
+    plt.xlabel('Classes')
+    plt.show()
+
+
 def main():
     data_path = 'hate-speech-dataset'
     lexicon_path = 'lexicon'
@@ -132,6 +157,7 @@ def main():
     visualize_tags(data_path)
     visualize_polarities(data_path, lexicon_path)
     visualize_negation(data_path, lexicon_path)
+    visualize_sentence_length(data_path)
 
 
 if __name__ == "__main__":
