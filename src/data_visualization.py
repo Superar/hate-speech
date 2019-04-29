@@ -10,8 +10,12 @@ from tqdm import tqdm
 
 
 def visualize_class_balance(data_path):
+    train_fileid = os.listdir(data_path + '/sampled_train')
+    train_fileid = map(os.path.splitext, train_fileid)
+    train_fileid = [id_ for (id_, _) in train_fileid]
     metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
-    class_counts = metadata['label'].value_counts(normalize=True)
+    train_instances = metadata.loc[metadata['file_id'].isin(train_fileid)]
+    class_counts = train_instances['label'].value_counts(normalize=True)
     percentage_strings = class_counts.round(4) * 100
     percentage_strings = percentage_strings.astype('str') + '%'
 
@@ -23,8 +27,8 @@ def visualize_class_balance(data_path):
 
 def visualize_tags(data_path):
     tag_counts = Counter()
-    for filename in tqdm(os.listdir(data_path + '/all_files')):
-        with open(data_path + '/all_files/' + filename) as f:
+    for filename in tqdm(os.listdir(data_path + '/sampled_train')):
+        with open(data_path + '/sampled_train/' + filename) as f:
             tokens = word_tokenize(f.read())
             tagged = list()
             for tok in pos_tag(tokens):
@@ -40,7 +44,7 @@ def visualize_tags(data_path):
     plt.bar(idx, values, width=1, edgecolor='black')
     plt.xticks(idx, labels=labels, rotation=90)
     plt.xlabel('Etiquetas')
-    plt.ylabel('Frequência absoluta')
+    plt.ylabel('Absolute Frequency')
     plt.show()
 
 
@@ -55,12 +59,16 @@ def visualize_polarities(data_path, lexicon_path):
     positive_f.close()
     negative_f.close()
 
+    train_fileid = os.listdir(data_path + '/sampled_train')
+    train_fileid = map(os.path.splitext, train_fileid)
+    train_fileid = [id_ for (id_, _) in train_fileid]
     metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
+    train_instances = metadata.loc[metadata['file_id'].isin(train_fileid)]
 
     polarity_counts = pd.DataFrame(0, index=['positive', 'negative', 'total'],
-                                   columns=metadata['label'].unique())
+                                   columns=train_instances['label'].unique())
 
-    for _, file_ in tqdm(metadata.iterrows()):
+    for _, file_ in tqdm(train_instances.iterrows()):
         filepath = data_path + '/all_files/' + file_['file_id'] + '.txt'
         class_ = file_['label']
 
@@ -99,12 +107,16 @@ def visualize_negation(data_path, lexicon_path):
     negation_words = {w.strip() for w in negation_f.readlines()}
     negation_f.close()
 
+    train_fileid = os.listdir(data_path + '/sampled_train')
+    train_fileid = map(os.path.splitext, train_fileid)
+    train_fileid = [id_ for (id_, _) in train_fileid]
     metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
+    train_instances = metadata.loc[metadata['file_id'].isin(train_fileid)]
 
     negation_counts = pd.DataFrame(0, index=['negation', 'total'],
-                                   columns=metadata['label'].unique())
+                                   columns=train_instances['label'].unique())
 
-    for _, file_ in tqdm(metadata.iterrows()):
+    for _, file_ in tqdm(train_instances.iterrows()):
         filepath = data_path + '/all_files/' + file_['file_id'] + '.txt'
         class_ = file_['label']
 
@@ -128,11 +140,16 @@ def visualize_negation(data_path, lexicon_path):
 
 
 def visualize_sentence_length(data_path):
+    train_fileid = os.listdir(data_path + '/sampled_train')
+    train_fileid = map(os.path.splitext, train_fileid)
+    train_fileid = [id_ for (id_, _) in train_fileid]
     metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
-    lengths = pd.DataFrame(
-        index=metadata['file_id'], columns=['label', 'length'])
+    train_instances = metadata.loc[metadata['file_id'].isin(train_fileid)]
 
-    for _, file_ in tqdm(metadata.iterrows()):
+    lengths = pd.DataFrame(index=metadata['file_id'],
+                           columns=['label', 'length'])
+
+    for _, file_ in tqdm(train_instances.iterrows()):
         filepath = data_path + '/all_files/' + file_['file_id'] + '.txt'
         class_ = file_['label']
         lengths.loc[file_['file_id'], 'label'] = class_
