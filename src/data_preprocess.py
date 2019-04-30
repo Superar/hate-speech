@@ -1,41 +1,81 @@
 #! /usr/bin/env python3
 import os
+import gensim
+import pickle
 import numpy as np
 import pandas as pd
 from scipy.stats import pearsonr
 from nltk.corpus import stopwords
+from gensim.models import Word2Vec
+from nltk import word_tokenize
 from sklearn.feature_extraction.text import CountVectorizer
+from gensim.test.utils import common_texts, get_tmpfile
+
+data_header = '../data/'
 
 def read_data(metadata,path):
     filenames = os.listdir(path)
     
     file_ids = [os.path.splitext(f)[0] for f in filenames]
     labels = metadata[metadata['file_id'].isin(file_ids)].label
-    labels_pd = pd.get_dummies(labels)['hate']
+    labels = pd.get_dummies(labels)['hate']
     
     corpus = [open(path+f).read() for f in filenames]
-    vectorizer = CountVectorizer(stop_words=stopwords.words('english'))
-    corpus = vectorizer.fit_transform(corpus)
-    corpus_pd = pd.DataFrame(corpus.toarray(),columns=vectorizer.get_feature_names())
     
-    return corpus_pd,labels_pd
+    return corpus,labels
+
+def word2vec(data,k=300,path='../data/model.bin'):
+    corpus = [word_tokenize(sentence) for sentence in data]
+    try:
+        model = Word2Vec.load(path)
+    except:
+        model = Word2Vec(corpus, size=k, window=5, min_count=1, workers=4)
+        model.save(path)
+
+    transformed_corpus = []
+    for example in corpus:
+        vec = np.zeros(k)
+        for word in example:
+            vec += model[word]
+        vec /= k
+        transformed_corpus.append(vec)
+
+    return transformed_corpus
 
 def select_by_corr(corpus,labels,top_n=1000):
+    vectorizer = CountVectorizer(stop_words=stopwords.words('english'))
+    bow = vectorizer.fit_transform(corpus)
+
     corrs = []
-    for col in corpus:
-        col = corpus[col].values
+    for col in bow.toarray().T:
         corr, _ = pearsonr(col, labels)
         corrs.append(corr)
 
-    cols = corpus.columns
+    vocab = np.asarray(vectorizer.get_feature_names())
     sorted_idxs = np.argsort(np.abs(corrs))[-top_n:]
-    top_sorted = cols[sorted_idxs]
-
-    return top_sorted
+    top_sorted = vocab[sorted_idxs]
     
-metadata = pd.read_csv('hate-speech-dataset/annotations_metadata.csv')
-corpus,labels = read_data(metadata,'hate-speech-dataset/sampled_train/')
+    selected_corpus = []
+    for sentence in corpus:
+        s = ''
+        sentence = word_tokenize(sentence)
+        for word in sentence:
+            if word in top_sorted:
+                s += word + ' '
+        selected_corpus.append(s)
 
-selected_feats = select_by_corr(corpus,labels)
-corpus = corpus[selected_feats]
-corpus.to_csv('processed_train.csv')
+    return selected_corpus
+    
+
+metadata = pd.read_csv('../hate-speech-dataset/annotations_metadata.csv')
+corpus,labels = read_data(metadata,'../hate-speech-dataset/sampled_train/')
+
+
+corpus1 = word2vec(corpus)
+with open(data_header + 'word2vec_train.pickle', 'wb') as f:
+    pickle.dump(corpus1, f, pickle.HIGHEST_PROTOCOL)
+
+
+corpus2 = select_by_corr(corpus,labels)
+with open(data_header + 'selected_train.pickle', 'wb') as f:
+    pickle.dump(corpus2, f, pickle.HIGHEST_PROTOCOL)
