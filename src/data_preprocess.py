@@ -9,7 +9,6 @@ from nltk.corpus import stopwords
 from gensim.models import Word2Vec
 from nltk import word_tokenize
 from sklearn.feature_extraction.text import CountVectorizer
-from gensim.test.utils import common_texts, get_tmpfile
 
 data_header = '../data/'
 
@@ -66,16 +65,21 @@ def select_by_corr(corpus,labels,top_n=1000):
 
     return selected_corpus
     
-
-metadata = pd.read_csv('../hate-speech-dataset/annotations_metadata.csv')
-corpus,labels = read_data(metadata,'../hate-speech-dataset/sampled_train/')
-
-
-corpus1 = word2vec(corpus)
-with open(data_header + 'word2vec_train.pickle', 'wb') as f:
-    pickle.dump(corpus1, f, pickle.HIGHEST_PROTOCOL)
+def main():
+    metadata = pd.read_csv('../hate-speech-dataset/annotations_metadata.csv')
+    corpus,labels = read_data(metadata,'../hate-speech-dataset/sampled_train/')
 
 
-corpus2 = select_by_corr(corpus,labels)
-with open(data_header + 'selected_train.pickle', 'wb') as f:
-    pickle.dump(corpus2, f, pickle.HIGHEST_PROTOCOL)
+    corpus1 = word2vec(corpus)
+    with open(data_header + 'word2vec_train.pickle', 'wb') as f:
+        pickle.dump(corpus1, f, pickle.HIGHEST_PROTOCOL)
+
+
+    for i in [500,1000,2000,3000]:
+        print(i)
+        corpus2 = select_by_corr(corpus,labels,i)
+        with open(data_header + 'selected'+str(i)+'_train.pickle', 'wb') as f:
+            pickle.dump(corpus2, f, pickle.HIGHEST_PROTOCOL)
+
+if __name__ == '__main__':
+    main()
