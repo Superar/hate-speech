@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from nltk import word_tokenize, pos_tag
-from collections import Counter
+from collections import Counter, defaultdict
 from tqdm import tqdm
 
 
@@ -26,7 +26,8 @@ def visualize_class_balance(data_path):
 
 
 def visualize_tags(data_path):
-    tag_counts = Counter()
+    metadata = pd.read_csv(data_path + '/annotations_metadata.csv')
+    tag_counts = defaultdict(Counter)
     for filename in tqdm(os.listdir(data_path + '/sampled_train')):
         with open(data_path + '/sampled_train/' + filename) as f:
             tokens = word_tokenize(f.read())
@@ -34,17 +35,15 @@ def visualize_tags(data_path):
             for tok in pos_tag(tokens):
                 if tok[1] not in string.punctuation and tok[1] not in ["''", '``']:
                     tagged.append(tok[1])
-            tag_counts.update(Counter(tagged))
-
-    labels, values = zip(*sorted(tag_counts.items(),
-                                 key=lambda x: x[1],
-                                 reverse=True))
-    idx = np.arange(2*len(labels), step=2)
-    plt.figure()
-    plt.bar(idx, values, width=1, edgecolor='black')
-    plt.xticks(idx, labels=labels, rotation=90)
-    plt.xlabel('Etiquetas')
-    plt.ylabel('Absolute Frequency')
+            file_id = os.path.splitext(filename)[0]
+            class_ = metadata.loc[metadata['file_id'] == file_id, 'label'].values[0]
+            tag_counts[class_].update(Counter(tagged))
+    tag_counts_df = pd.DataFrame.from_dict(tag_counts)
+    tag_counts_df.sort_values(tag_counts_df.columns[0], axis=0, ascending=False, inplace=True)
+    tag_counts_df = (tag_counts_df / tag_counts_df.sum()) * 100
+    tag_counts_df.plot.bar()
+    plt.xlabel('Part-of-speech tags')
+    plt.ylabel('Relative Frequency (%)')
     plt.show()
 
 
