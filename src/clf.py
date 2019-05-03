@@ -48,3 +48,4 @@ for i in [500,1000]:
 	vectorizer = TfidfVectorizer()
 	tfidf = vectorizer.fit_transform(corpus)
 	run_cv(tfidf,labels.values,'tfidf')
+

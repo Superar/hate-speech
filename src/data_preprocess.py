@@ -50,7 +50,10 @@ def word2vec(data,k=300,path='../data/model.bin'):
     for example in corpus:
         vec = np.zeros(k)
         for word in example:
-            vec += model[word]
+            try:
+                vec += model[word]
+            except:
+                print(word,'is not part of vocab')
         vec /= k
         transformed_corpus.append(vec)
 
@@ -80,21 +83,25 @@ def select_by_corr(corpus,labels,top_n=1000):
 
     return selected_corpus
     
-def main():
+def save_features(path='../hate-speech-dataset/sampled_train/',suffix='train'):
     metadata = pd.read_csv('../hate-speech-dataset/annotations_metadata.csv')
-    corpus,labels = read_data(metadata,'../hate-speech-dataset/sampled_train/')
+    corpus,labels = read_data(metadata,path)
 
 
     corpus1 = word2vec(corpus)
-    with open(data_header + 'word2vec_train.pickle', 'wb') as f:
+    with open(data_header + 'word2vec_'+suffix+'.pickle', 'wb') as f:
         pickle.dump(corpus1, f, pickle.HIGHEST_PROTOCOL)
 
 
     for i in [500,1000]:
         print(i)
         corpus2 = select_by_corr(corpus,labels,i)
-        with open(data_header + 'selected'+str(i)+'_train.pickle', 'wb') as f:
+        with open(data_header + 'selected'+str(i)+'_'+suffix+'.pickle', 'wb') as f:
             pickle.dump(corpus2, f, pickle.HIGHEST_PROTOCOL)
+
+
+def main():
+    save_features('../hate-speech-dataset/sampled_test/','test')
 
 if __name__ == '__main__':
     main()
