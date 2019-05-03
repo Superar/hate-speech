@@ -23,12 +23,12 @@ def read_data(metadata,path):
     
     stop_words = set(stopwords.words('portuguese')) 
     pt_stemmer = SnowballStemmer('portuguese')
-    translator = str.maketrans('','', string.punctuation)
+    # translator = str.maketrans('','', string.punctuation)
 
     corpus = []
     for f in filenames:
         text = open(path+f).read().lower()
-        text = text.translate(translator)
+        # text = text.translate(translator)
         tokens = word_tokenize(text,language='portuguese')
         sentence = ''
         for token in tokens:
@@ -101,6 +101,7 @@ def save_features(path='../hate-speech-dataset/sampled_train/',suffix='train'):
 
 
 def main():
+    save_features('../hate-speech-dataset/sampled_train/','train')
     save_features('../hate-speech-dataset/sampled_test/','test')
 
 if __name__ == '__main__':

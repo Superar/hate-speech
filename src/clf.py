@@ -14,19 +14,19 @@ data_header = '../data/'
 def run_cv(train,labels,debug):
     print(debug)
     
-    svm = LinearSVC(random_state=0, tol=1e-5)
-    scores = cross_val_score(svm, train, labels, cv=5)
-    print('svm',np.mean(scores),np.std(scores))
+    # svm = LinearSVC(random_state=0, tol=1e-5)
+    # scores = cross_val_score(svm, train, labels, cv=5, scoring='f1')
+    # print('svm',np.mean(scores),np.std(scores))
 
-    for k in [10,50,100,150]:
+    for k in [2,5,10,50]:
 	    knn = KNeighborsClassifier(n_neighbors=k, metric='euclidean')
-	    scores = cross_val_score(knn, train, labels, cv=5)
+	    scores = cross_val_score(knn, train, labels, cv=5, scoring='f1')
 	    print('knn',k,np.mean(scores),np.std(scores))
 
-    for dims in [(50,20),(50,20,5),(100,50),(100,50,10)]:
-	    mlp = MLPClassifier(hidden_layer_sizes=dims)
-	    scores = cross_val_score(mlp, train, labels, cv=5)
-	    print('mlp',dims,np.mean(scores),np.std(scores))
+    # for dims in [(50,20),(50,20,5),(100,50),(100,50,10)]:
+	#     mlp = MLPClassifier(hidden_layer_sizes=dims)
+	#     scores = cross_val_score(mlp, train, labels, cv=5, scoring='f1')
+	#     print('mlp',dims,np.mean(scores),np.std(scores))
 
 metadata = pd.read_csv('../hate-speech-dataset/annotations_metadata.csv')
 _,labels = read_data(metadata,'../hate-speech-dataset/sampled_train/')
@@ -35,7 +35,7 @@ with open(data_header + 'word2vec_train.pickle', 'rb') as f:
     w2v = pickle.load(f)
 run_cv(w2v,labels.values,'word2vec')
 
-for i in [500,1000]:
+for i in [1000]:
 	print(i)
 
 	with open(data_header + 'selected'+str(i)+'_train.pickle', 'rb') as f:

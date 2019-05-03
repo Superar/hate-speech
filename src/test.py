@@ -20,11 +20,12 @@ def run_test(train,labels_train,test,labels_test,clf):
 	predictions = clf.predict(test)
 
 	f1 = f1_score(labels_test, predictions, average='binary')  
-	print('f1',f1)
-	print('precision',precision_score(labels_test,predictions))
-	print('recall',recall_score(labels_test,predictions))
-	print('accuracy',accuracy_score(labels_test,predictions))
+	p = precision_score(labels_test,predictions)
+	r = recall_score(labels_test,predictions)
+	a = accuracy_score(labels_test,predictions)
 
+	print("%.4f & %.4f & %.4f & %.4f" % (f1,p,r,a))
+	
 metadata = pd.read_csv('../hate-speech-dataset/annotations_metadata.csv')
 _,labels_train = read_data(metadata,'../hate-speech-dataset/sampled_train/')
 _,labels_test = read_data(metadata,'../hate-speech-dataset/sampled_test/')
@@ -34,7 +35,7 @@ with open(data_header + 'word2vec_train.pickle', 'rb') as f:
 with open(data_header + 'word2vec_test.pickle', 'rb') as f:
     test = pickle.load(f)
 print('w2v + mlp')
-mlp = MLPClassifier(hidden_layer_sizes=(50,20))
+mlp = MLPClassifier(hidden_layer_sizes=(100, 50, 10))
 run_test(train,labels_train,test,labels_test,mlp)
 
 i = 500
@@ -50,7 +51,7 @@ vectorizer = CountVectorizer()
 vectorizer = vectorizer.fit(corpus_train)
 train = vectorizer.transform(corpus_train)
 test = vectorizer.transform(corpus_test)
-mlp = MLPClassifier(hidden_layer_sizes=(50,20,5))
+mlp = MLPClassifier(hidden_layer_sizes=(100, 50))
 run_test(train,labels_train,test,labels_test,mlp)
 
 print('tf-idf + svm')
@@ -58,5 +59,5 @@ vectorizer = TfidfVectorizer()
 vectorizer = vectorizer.fit(corpus_train)
 train = vectorizer.transform(corpus_train)
 test = vectorizer.transform(corpus_test)
-svm = LinearSVC(random_state=0, tol=1e-5)
-run_test(train,labels_train,test,labels_test,svm)
+mlp = MLPClassifier(hidden_layer_sizes=(100, 50, 10))
+run_test(train,labels_train,test,labels_test,mlp)
